@@ -1,6 +1,7 @@
 ﻿using Dapper;
 using DapperIntro.Entities;
 using Microsoft.Data.SqlClient;
+using Z.Dapper.Plus;
 
 namespace DapperIntro
 {
@@ -13,6 +14,70 @@ namespace DapperIntro
         {
             using SqlConnection connection = new SqlConnection(_connectionString);
             connection.Open();
+
+            DapperPlusManager.Entity<Book>().Table("Books").Key(b => b.Id);
+            DapperPlusManager.Entity<Author>().Table("Authors").Key(a => a.Id);
+
+            List<Employee> employees = new List<Employee>()
+            {
+                new Employee()
+                {
+                    Name = "Антон Коваль",
+                    Salary = 25000
+                },
+                new Employee()
+                {
+                    Name = "Анастасія Ковальчук",
+                    Salary = 30000
+                }
+            };
+
+            connection.BulkMerge(employees);
+
+            //List<Author> authors = new List<Author>()
+            //{
+            //    new Author()
+            //    {
+            //        Id = 1006,
+            //        Name = "Тарас Григорович Шевченко"
+            //    },
+            //    new Author()
+            //    {
+            //        Id = 1007,
+            //        Name = "Донна Тарт"
+            //    },
+            //    new Author()
+            //    {
+            //        Id = 1008,
+            //        Name = "Микола Хивльовий"
+            //    },
+            //    new Author()
+            //    {
+            //        Id = 1009,
+            //        Name = "Юрій Горліс-Горський"
+            //    }
+            //};
+
+            //authors[2].Name = "Микола Григорович Хвильовий";
+
+            //authors.Add(new Author()
+            //{
+            //    Name = "Михайль Семенко"
+            //});
+
+            ////connection.BulkInsert(authors);
+
+            //connection.BulkMerge(authors);
+
+            // connection.BulkDelete(authors);
+
+            //authors[2].Name = "Микола Григорович Хвильовий";
+
+
+
+            // connection.BulkUpdate(authors);
+
+            // connection.BulkInsert(authors);
 
             #region
             //Visitor visitor = new Visitor()
@@ -68,11 +133,11 @@ namespace DapperIntro
 
             //AddLoan(connection, 1, 2);
 
-            var loans = ReadLoans(connection);
-            foreach(var loan in loans)
-            {
-                Console.WriteLine($"{loan.Book.Title} -- {loan.Visitor.Name} -- {loan.LoanDate}");
-            }
+            //var loans = ReadLoans(connection);
+            //foreach(var loan in loans)
+            //{
+            //    Console.WriteLine($"{loan.Book.Title} -- {loan.Visitor.Name} -- {loan.LoanDate}");
+            //}
         }
 
         public static List<BookLoan> ReadLoans(SqlConnection connection)
