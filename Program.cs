@@ -57,14 +57,59 @@ namespace DapperIntro
 
             #endregion
 
-            var authors = ReadAuthorsWithBooks(connection);
+            //var authors = ReadAuthorsWithBooks(connection);
 
-            foreach(var author in authors)
+            //foreach(var author in authors)
+            //{
+            //    Console.WriteLine($"{author.Name}");
+            //    foreach (var book in author.Books)
+            //        Console.WriteLine($"--{book.Title}");
+            //}
+
+            //AddLoan(connection, 1, 2);
+
+            var loans = ReadLoans(connection);
+            foreach(var loan in loans)
             {
-                Console.WriteLine($"{author.Name}");
-                foreach (var book in author.Books)
-                    Console.WriteLine($"--{book.Title}");
+                Console.WriteLine($"{loan.Book.Title} -- {loan.Visitor.Name} -- {loan.LoanDate}");
             }
+        }
+
+        public static List<BookLoan> ReadLoans(SqlConnection connection)
+        {
+            string query = @"SELECT bl.BookId, bl.VisitorId, bl.LoanDate, bl.ReturnDate,
+                            b.Id, b.Title, b.AuthorId, v.Id, v.Name, v.PhoneNumber, v.BirthDate
+                            FROM BookLoans bl
+                            JOIN Books b ON bl.BookId = b.Id
+                            JOIN Visitors v ON v.Id = bl.VisitorId";
+
+            var loans = connection.Query<BookLoan, Book, Visitor, BookLoan>(
+                    query,
+                    (bookLoan, book, visitor) =>
+                    {
+                        bookLoan.Book = book;
+                        bookLoan.Visitor = visitor;
+                        return bookLoan;
+                    },
+                    splitOn: "Id, Id").ToList();
+
+            return loans;
+        }
+
+        public static void AddLoan(SqlConnection connection, int visitorId, int bookId)
+        {
+            string query = @"INSERT INTO BookLoans (BookId, VisitorId, LoanDate, ReturnDate)
+                VALUES (@BookId, @VisitorId, @LoanDate, @ReturnDate);";
+
+            connection.Execute(
+                query,
+                new BookLoan()
+                {
+                    BookId = bookId,
+                    VisitorId = visitorId,
+                    LoanDate = DateTime.Now,
+                    ReturnDate = null
+                });
         }
 
         public static List<Author> ReadAuthorsWithBooks(SqlConnection connection)

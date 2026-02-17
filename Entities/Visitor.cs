@@ -12,5 +12,7 @@ namespace DapperIntro.Entities
         public DateTime BirthDate { get; set; }
 
         public VisitorPassport Passport { get; set; } = null!;
+
+        public List<BookLoan> Loans { get; set; } = null!;
     }
 }
