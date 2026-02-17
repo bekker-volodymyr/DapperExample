@@ -14,6 +14,7 @@ namespace DapperIntro
             using SqlConnection connection = new SqlConnection(_connectionString);
             connection.Open();
 
+            #region
             //Visitor visitor = new Visitor()
             //{
             //    Name = "Дмитро Корольов",
@@ -35,24 +36,68 @@ namespace DapperIntro
             //    Console.WriteLine($"{visitor.Name} -- {visitor.Passport.PassportNumber}");
             //}
 
-            Author author = new Author()
-            {
-                Name = "Френк Герберт"
-            };
+            //Author author = new Author()
+            //{
+            //    Name = "Френк Герберт"
+            //};
 
-            List<Book> books = new List<Book>()
-            {
-                new Book()
-                {
-                    Title = "Дюна"
-                },
-                new Book()
-                {
-                    Title = "Мессія Дюни"
-                }
-            };
+            //List<Book> books = new List<Book>()
+            //{
+            //    new Book()
+            //    {
+            //        Title = "Дюна"
+            //    },
+            //    new Book()
+            //    {
+            //        Title = "Мессія Дюни"
+            //    }
+            //};
 
-            AddAuthorWithBooks(connection, author, books);
+            //AddAuthorWithBooks(connection, author, books);
+
+            #endregion
+
+            var authors = ReadAuthorsWithBooks(connection);
+
+            foreach(var author in authors)
+            {
+                Console.WriteLine($"{author.Name}");
+                foreach (var book in author.Books)
+                    Console.WriteLine($"--{book.Title}");
+            }
+        }
+
+        public static List<Author> ReadAuthorsWithBooks(SqlConnection connection)
+        {
+            string query = @"
+                SELECT A.Id, A.Name, B.Id, B.Title, B.AuthorId
+                FROM Authors A
+                LEFT JOIN Books B ON A.Id = B.AuthorId
+            ";
+
+            var authorsDictionary = new Dictionary<long, Author>();
+
+            var authors = connection.Query<Author, Book, Author>(
+                    query,
+                    (a, b) =>
+                    {
+                        if (!authorsDictionary.TryGetValue(a.Id, out var author))
+                        {
+                            author = a;
+                            author.Books = new List<Book>();
+                            authorsDictionary.Add(author.Id, author);
+                        }
+
+                        if (b != null)
+                        {
+                            author.Books.Add(b);
+                        }
+
+                        return author;
+                    },
+                    splitOn: "Id").Distinct().ToList();
+
+            return authors;
         }
 
         public static void AddAuthorWithBooks(SqlConnection connection, Author author, List<Book> books)
